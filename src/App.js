@@ -11,7 +11,6 @@ function App() {
             <table>
             {gridTile.map(gridTile => {
                     return (<tr>{gridTile.map(tile => {
-                            tile.setNum(0);
                             return (
                                 <td>
                                 <Box tile={tile}/>
@@ -35,6 +34,8 @@ function generateGrid(gridSizeX, gridSizeY){
                 tempGrid[i][j] = new Tile(i, j, true, false);
             else
                 tempGrid[i][j] = new Tile(i, j, false, false);
+            let num = Math.floor(Math.random() * 9);
+            tempGrid[i][j].setNum(num);
         }
     }
     return tempGrid;
@@ -46,22 +47,33 @@ class Box extends React.Component {
         this.state = {
             isBomb: props.tile.checkBomb(),
             isVisible: props.tile.getVisible(),
+            isFlag: props.tile.getFlag(),
             tile: props.tile
         };
         this.blockClick = this.blockClick.bind(this);
     }
 
-    blockClick(){
-        this.setState({
-            isVisible: true
-        });
+    blockClick(event){
+        if(event.button === 0 && !this.state.isFlag) {
+            this.setState({
+                isVisible: true
+            });
+            console.log(this.state.tile.getNum());
+        }
+        else if(event.button === 2){
+            event.preventDefault();
+            this.setState({
+                isFlag: !this.state.isFlag
+            })
+        }
     }
+
 
     render() {
         return (
             <div className='block'>
-                <button onClick={this.blockClick} className={`${this.state.isVisible ? "isClicked" : ""}`}>
-                    <p>{this.state.tile.checkBomb() ? "X" : ""}</p>
+                <button onClick={this.blockClick} onContextMenu={this.blockClick} className={`${this.state.isVisible ? "isClicked" : ""}`}>
+                    <p>{this.state.isVisible ? `${this.state.tile.checkBomb() ? "X" : `${this.state.tile.getNum() || ""}`}` : `${this.state.isFlag ? '?' : ''}`} </p>
                 </button>
             </div>
         )
@@ -74,11 +86,14 @@ class Tile {
         this.posY = posY;
         this.isBomb = isBomb;
         this.isVisible = isVisible;
+        this.num = null;
+        this.isFlag = false;
     }
 
     checkBomb() {
         return this.isBomb;
     }
+
     setVisible(isvisible){
         this.isVisible = isvisible;
     }
@@ -86,10 +101,16 @@ class Tile {
         return this.isVisible;
     }
 
+    setFlag(isFlag){
+        this.isFlag = isFlag;
+    }
+    getFlag(){
+        return this.isFlag;
+    }
+
     setNum(num) {
         this.num = num;
     }
-
     getNum() {
         return this.num;
     }
