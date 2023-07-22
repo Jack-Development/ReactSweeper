@@ -9,7 +9,7 @@ This project was developed using the following tools:
 <div>
   <code><img height="50" src="https://github.com/devicons/devicon/blob/master/icons/react/react-original.svg" alt="react"></code>
   <code><img height="50" src="https://github.com/devicons/devicon/blob/master/icons/javascript/javascript-original.svg" alt="javascript"></code>
-  <code><img height="50" src="https://github.com/devicons/devicon/blob/master/icons/css3/css3-original.svg" alt="css3"></code>
+  <code><img height="50" src="https://github.com/devicons/devicon/blob/master/icons/sass/sass-original.svg" alt="sass"></code>
 </div>
 
 ## Development Info 🔧
