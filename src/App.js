@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Grid from './components/grid.js';
+import { FaRedo } from 'react-icons/fa';
 import './App.css';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
             <div className="Grid">
                 <Grid width={width} height={height} size={size} bombs={bombs} reset={reset} seed={seed}/>
             </div>
+            <FaRedo className="refresh-button" onClick={() => setReset(!reset)} />
         </div>
     );
 }

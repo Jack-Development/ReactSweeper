@@ -113,3 +113,14 @@ body {
   font-size: 16px;
   cursor: pointer;
 }
+
+.refresh-button {
+  position: fixed;
+  right: 20px;
+  top: 20px;
+  font-size: 30px;
+  cursor: pointer;
+  color: rgba(100, 66, 47, 0.7); /* slightly transparent */
+  z-index: 2;
+}
+
