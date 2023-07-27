@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/react-sweeper/static/css/main.cb8b25a1.css",
+    "main.js": "/react-sweeper/static/js/main.0fda7744.js",
+    "static/js/787.94585327.chunk.js": "/react-sweeper/static/js/787.94585327.chunk.js",
+    "index.html": "/react-sweeper/index.html",
+    "main.cb8b25a1.css.map": "/react-sweeper/static/css/main.cb8b25a1.css.map",
+    "main.0fda7744.js.map": "/react-sweeper/static/js/main.0fda7744.js.map",
+    "787.94585327.chunk.js.map": "/react-sweeper/static/js/787.94585327.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.cb8b25a1.css",
+    "static/js/main.0fda7744.js"
+  ]
+}
