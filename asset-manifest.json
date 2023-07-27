@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/ReactSweeper/static/css/main.cb8b25a1.css",
-    "main.js": "/ReactSweeper/static/js/main.671460aa.js",
+    "main.css": "/ReactSweeper/static/css/main.500f722b.css",
+    "main.js": "/ReactSweeper/static/js/main.267bd109.js",
     "static/js/787.94585327.chunk.js": "/ReactSweeper/static/js/787.94585327.chunk.js",
     "index.html": "/ReactSweeper/index.html",
-    "main.cb8b25a1.css.map": "/ReactSweeper/static/css/main.cb8b25a1.css.map",
-    "main.671460aa.js.map": "/ReactSweeper/static/js/main.671460aa.js.map",
+    "main.500f722b.css.map": "/ReactSweeper/static/css/main.500f722b.css.map",
+    "main.267bd109.js.map": "/ReactSweeper/static/js/main.267bd109.js.map",
     "787.94585327.chunk.js.map": "/ReactSweeper/static/js/787.94585327.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.cb8b25a1.css",
-    "static/js/main.671460aa.js"
+    "static/css/main.500f722b.css",
+    "static/js/main.267bd109.js"
   ]
 }
