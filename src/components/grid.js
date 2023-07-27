@@ -1,157 +1,209 @@
-import React, {useRef} from "react";
-import ReactDOM from "react-dom";
-import './grid.scss';
+import React from 'react';
 
-const gridSizeX = 30;
-const gridSizeY = 15;
-let grid = null;
+// Define a small Square component for each gray square
+const Square = ({ size, isBomb, adjacentBombs, clicked, onClick, onRightClick, isFlagged, isGameWon}) => {
+    const color = clicked ? (isBomb ? (isGameWon ? 'green' : 'red') : 'lightgrey') : 'grey';
+    const darkerColor = clicked && isBomb ? (isGameWon ? 'darkgreen' : 'darkred') : 'darkgrey';
+    const lighterColor = clicked && isBomb ? (isGameWon ? 'lightgreen' : 'lightcoral') : 'white';
 
-function Grid() {
-    grid = createGrid();
-    console.log(grid);
+    // Scale inset relative to the size of the box
+    const insetSize = size * 0.07;  // Change the multiplier as needed to adjust the scale
+
     return (
-        <div className="grid">
-            <table>
-                <tbody>
-                {[...Array(gridSizeY)].map((Tiles, j) => {
-                        return (<tr>{[...Array(gridSizeX)].map((Tile, i) => {
-                                return (
-                                    <td key={`${i},${j}`}>
-                                        {makeBox(i, j)}
-                                    </td>
-                                )
-                            }
-                        )}</tr>)
-                    }
-                )}</tbody>
-            </table>
+        <div
+            onClick={onClick}
+            onContextMenu={onRightClick}
+            className="Square"
+            style={{
+                width: `${size}px`,
+                height: `${size}px`,
+                backgroundColor: color,
+                fontSize: `${size / 2}px`,
+                boxShadow: `inset ${insetSize}px ${insetSize}px 0 ${lighterColor}, inset -${insetSize}px -${insetSize}px 0 ${darkerColor}`,
+            }}
+        >
+            {!clicked && isFlagged && "🚩"}
+            {clicked && !isBomb && adjacentBombs > 0 && adjacentBombs}
         </div>
     );
-}
+};
 
-function createGrid() {
-    let tempGrid = [[]];
-    for (let i = 0; i < gridSizeX; i++) {
-        tempGrid[i] = [];
-        for (let j = 0; j < gridSizeY; j++) {
-            let number = Math.floor(Math.random() * 9);
-            let bomb = false;
-            tempGrid[i][j] = new Properties(number, false, bomb);
-        }
-    }
-    return tempGrid;
-}
-
-function makeBox(x, y) {
-    return <Box posX={x} posY={y} key={`${x},${y} Tile`}/>;
-}
-
-function revealNeighbour(posX, posY){
-    for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-            if (i === 0 && j === 0) {
-                continue;
-            }
-            let gridX = posX + i;
-            let gridY = posY + j;
-            if (gridX >= 0 && gridX < gridSizeX && gridY >= 0 && gridY < gridSizeY) {
-                if (!grid[posX][posY].getBomb() && grid[posX][posY].getNumber() === 0 && !grid[posX][posY].getVisible()){
-                    grid[gridX][gridY].setVisible(true);
-                    revealNeighbour(gridX, gridY);
-                }else {
-                    grid[gridX][gridY].setVisible(true);
-                }
-            }
-        }
-    }
-}
-
-class Properties {
-    constructor(number, isVisible, isBomb) {
-        this.number = number;
-        this.isVisible = isVisible;
-        this.isBomb = isBomb;
-    }
-
-    setVisible(newVisible){
-        this.isVisible = newVisible;
-    }
-
-    getNumber(){
-        return this.number;
-    }
-    getVisible(){
-        return this.isVisible;
-    }
-    getBomb(){
-        return this.isBomb;
-    }
-
-}
-
-class Box extends React.Component {
+// The main Grid component
+class Grid extends React.Component {
     constructor(props) {
         super(props);
+        const { width, height, bombs } = this.props;
+        const squares = Array(height).fill().map(() => Array(width).fill(null));
+
+        // Generate bombs
+        let bombLocations = [];
+        while (bombLocations.length < bombs) {
+            let bombLocation = [Math.floor(Math.random()*width), Math.floor(Math.random()*height)];
+            if (!bombLocations.some(location => location[0] === bombLocation[0] && location[1] === bombLocation[1])) {
+                bombLocations.push(bombLocation);
+            }
+        }
+
+        const bombSquare = bombLocations.reduce((acc, curr) => {
+            acc[curr[1]][curr[0]] = true;
+            return acc;
+        }, squares);
+
         this.state = {
-            posX: props.posX,
-            posY: props.posY,
-            isFlag: props.isFlag
+            squares: bombSquare.map((row, rowIndex) =>
+                row.map((col, colIndex) =>
+                    ({
+                        isBomb: col,
+                        clicked: false,
+                        isFlagged: false,
+                        adjacentBombs: this.calculateAdjacentBombs(bombSquare, rowIndex, colIndex)
+                    })
+                )
+            ),
+            isGameWon: false
         };
-        this.blockClick = this.blockClick.bind(this);
-        this.tileRef = React.createRef();
     }
 
-    getPosX() {
-        return this.constructor.name
-    }
+    calculateAdjacentBombs(squares, row, col) {
+        const directions = [
+            [-1, -1], [-1, 0], [-1, 1],
+            [0, -1],           [0, 1],
+            [1, -1], [1, 0], [1, 1]
+        ];
 
-    getPosY() {
-        return this;
-    }
+        return directions.reduce((acc, curr) => {
+            const newRow = row + curr[0];
+            const newCol = col + curr[1];
 
-    blockClick(event) {
-        if (event.button === 0 && !this.state.isFlag && !grid[this.state.posX][this.state.posY].getVisible()) {
-            grid[this.state.posX][this.state.posY].setVisible(true);
-            if (!grid[this.state.posX][this.state.posY].getBomb() && grid[this.state.posX][this.state.posY].getNumber() === 0) {
-                revealNeighbour(this.state.posX, this.state.posY);
+            if(newRow >= 0 && newRow < squares.length && newCol >= 0 && newCol < squares[0].length) {
+                return acc + (squares[newRow][newCol] ? 1 : 0);
             }
-            this.forceUpdate();
-        } else if (event.button === 2) {
-            event.preventDefault();
-            this.setState({
-                isFlag: !this.state.isFlag
-            })
-        }
-        console.log(grid[this.state.posX][this.state.posY].getVisible());
+
+            return acc;
+        }, 0);
     }
 
-    setText() {
-        // Can be expressed as:
-        // this.state.isVisible ? `${this.state.tile.checkBomb() ? "X" : `${this.state.tile.getNum() || ""}`}` : `${this.state.isFlag ? '?' : ''}`
-        if (grid[this.state.posX][this.state.posY].getVisible()) {
-            if (grid[this.state.posX][this.state.posY].getBomb()) {
-                return "X";
-            } else {
-                return (grid[this.state.posX][this.state.posY].getNumber() || "");
+    handleClick = (row, col) => {
+        this.setState(state => {
+            const newSquares = state.squares.map((rowSquares, rowIndex) =>
+                rowSquares.map((square, colIndex) => {
+                    if (rowIndex === row && colIndex === col) {
+                        if(square.isFlagged) {
+                            // If square is flagged, ignore the click.
+                            return square;
+                        } else if (square.isBomb) {
+                            // If the clicked square is a bomb, set clicked to true for all squares
+                            return {...square, clicked: true};
+                        } else {
+                            return {...square, clicked: true};
+                        }
+                    } else {
+                        return square;
+                    }
+                })
+            );
+
+            if(!newSquares[row][col].isFlagged) {
+                if (newSquares[row][col].isBomb) {
+                    // if the clicked square is a bomb, set clicked to true for all squares
+                    for (let i = 0; i < newSquares.length; i++) {
+                        for (let j = 0; j < newSquares[i].length; j++) {
+                            newSquares[i][j].clicked = true;
+                        }
+                    }
+                } else if (newSquares[row][col].adjacentBombs === 0) {
+                    const directions = [
+                        [-1, -1], [-1, 0], [-1, 1],
+                        [0, -1], [0, 1],
+                        [1, -1], [1, 0], [1, 1]
+                    ];
+
+                    for (let direction of directions) {
+                        const newRow = row + direction[0];
+                        const newCol = col + direction[1];
+                        if (newRow >= 0 && newRow < state.squares.length && newCol >= 0 && newCol < state.squares[0].length) {
+                            if (!newSquares[newRow][newCol].clicked) {
+                                newSquares[newRow][newCol].clicked = true;
+                                if (newSquares[newRow][newCol].adjacentBombs === 0) {
+                                    this.handleClick(newRow, newCol);
+                                }
+                            }
+                        }
+                    }
+                }
             }
-        } else {
-            if (this.state.isFlag) {
-                return "?";
-            } else {
-                return "";
+
+            // If all non-bomb squares are clicked, reveal all squares
+            const nonBombCount = state.squares.reduce((count, rowSquares) =>
+                count + rowSquares.reduce((rowCount, square) => rowCount + (square.isBomb ? 0 : 1), 0), 0);
+            const clickedCount = newSquares.reduce((count, rowSquares) =>
+                count + rowSquares.reduce((rowCount, square) => rowCount + (square.clicked ? 1 : 0), 0), 0);
+
+            if (nonBombCount === clickedCount) {
+                newSquares.forEach(rowSquares => rowSquares.forEach(square => square.clicked = true));
+                return {squares: newSquares, isGameWon: true};
             }
-        }
+
+            return {squares: newSquares};
+        });
+    }
+
+    handleRightClick = (event, row, col) => {
+        event.preventDefault();
+        this.setState(state => {
+            const newSquares = state.squares.map((rowSquares, rowIndex) =>
+                rowSquares.map((square, colIndex) => {
+                    if (rowIndex === row && colIndex === col && !square.clicked) {
+                        return {...square, isFlagged: !square.isFlagged};
+                    } else {
+                        return square;
+                    }
+                })
+            );
+
+            // If all bombs are flagged, reveal all squares
+            const bombCount = state.squares.reduce((count, rowSquares) =>
+                count + rowSquares.reduce((rowCount, square) => rowCount + (square.isBomb ? 1 : 0), 0), 0);
+            const flagCount = newSquares.reduce((count, rowSquares) =>
+                count + rowSquares.reduce((rowCount, square) => rowCount + (square.isFlagged ? 1 : 0), 0), 0);
+            const correctFlags = newSquares.reduce((count, rowSquares) =>
+                count + rowSquares.reduce((rowCount, square) => rowCount + (square.isFlagged ? (square.isBomb ? 1 : 0) : 0), 0), 0);
+
+            if (bombCount === correctFlags && flagCount === correctFlags) {
+                newSquares.forEach(rowSquares => rowSquares.forEach(square => {
+                    square.clicked = true;
+                    if (square.isBomb) {
+                        square.isFlagged = true;
+                    }
+                }));
+                return {squares: newSquares, isGameWon: true};
+            }
+
+            return {squares: newSquares};
+        });
     }
 
     render() {
+        const { width, height, size } = this.props;
         return (
-            <div className='block' id={`${this.state.posY},${this.state.posX} Tile`} ref={this.tileRef}>
-                <button onClick={this.blockClick} onContextMenu={this.blockClick}
-                        className={`${grid[this.state.posX][this.state.posY].getVisible() ? `isClicked ${grid[this.state.posX][this.state.posY].getBomb() ? "isBomb" : ""}` : ""}`}>
-                    <p>{this.setText()}</p>
-                </button>
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${width}, 1fr)`,
+                gridTemplateRows: `repeat(${height}, 1fr)`,
+                gridGap: '0',
+                width: `${size * width}px`,
+                height: `${size * height}px`
+            }}>
+                {this.state.squares.flatMap((row, i) =>
+                    row.map((square, j) => <Square key={`square-${i}-${j}`} size={size} isBomb={square.isBomb}
+                                                   adjacentBombs={square.adjacentBombs} clicked={square.clicked}
+                                                   onClick={() => this.handleClick(i, j)}
+                                                   onRightClick={(e) => this.handleRightClick(e, i, j)} isFlagged={square.isFlagged}
+                                                   isGameWon={this.state.isGameWon}
+                    />)
+                )}
             </div>
-        )
+        );
     }
 }
 
