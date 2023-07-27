@@ -8,6 +8,12 @@
 
 ReactSweeper is a compelling, user-friendly adaptation of the classic Minesweeper game, designed with React. This modern take on a classic game is not just a fun pastime, but also a showcase of what can be achieved with React.
 
+You can check out a live demo of the project [here](https://jack-development.github.io/ReactSweeper/).
+
+## Live Demo 🎮
+
+Test out the application at [https://jack-development.github.io/ReactSweeper/](https://jack-development.github.io/ReactSweeper/)
+
 ## Features 🚀
 
 - Interactive grid, with dynamic scaling and resizing based on user input.
