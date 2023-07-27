@@ -10,8 +10,7 @@ ReactSweeper is a compelling, user-friendly adaptation of the classic Minesweepe
 
 ## Features 🚀
 
-- Interactive grid allowing for a range of game complexity from 1x1 to 16x16.
-- Dynamically resizable grid based on user input.
+- Interactive grid, with dynamic scaling and resizing based on user input.
 - Ability to place flags on squares, preventing accidental clicking.
 - Visual feedback for success and failure, including colored indicators for safe squares and mines.
 - The game reveals the entire board when a win or loss is detected.
