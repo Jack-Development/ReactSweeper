@@ -1,44 +1,57 @@
 import React from 'react';
+import Square from './square.js';
+import seedrandom from 'seedrandom';
 
-// Define a small Square component for each gray square
-const Square = ({ size, isBomb, adjacentBombs, clicked, onClick, onRightClick, isFlagged, isGameWon}) => {
-    const color = clicked ? (isBomb ? (isGameWon ? 'green' : 'red') : 'lightgrey') : 'grey';
-    const darkerColor = clicked && isBomb ? (isGameWon ? 'darkgreen' : 'darkred') : 'darkgrey';
-    const lighterColor = clicked && isBomb ? (isGameWon ? 'lightgreen' : 'lightcoral') : 'white';
-
-    // Scale inset relative to the size of the box
-    const insetSize = size * 0.07;  // Change the multiplier as needed to adjust the scale
-
-    return (
-        <div
-            onClick={onClick}
-            onContextMenu={onRightClick}
-            className="Square"
-            style={{
-                width: `${size}px`,
-                height: `${size}px`,
-                backgroundColor: color,
-                fontSize: `${size / 2}px`,
-                boxShadow: `inset ${insetSize}px ${insetSize}px 0 ${lighterColor}, inset -${insetSize}px -${insetSize}px 0 ${darkerColor}`,
-            }}
-        >
-            {!clicked && isFlagged && "🚩"}
-            {clicked && !isBomb && adjacentBombs > 0 && adjacentBombs}
-        </div>
-    );
-};
+function getRndInteger(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+}
 
 // The main Grid component
 class Grid extends React.Component {
     constructor(props) {
         super(props);
-        const { width, height, bombs } = this.props;
-        const squares = Array(height).fill().map(() => Array(width).fill(null));
+        this.state = {
+            width: this.props.width,
+            height: this.props.height,
+            reset: false,
+            seed: getRndInteger(1000000000, 9999999999),
+            squares: this.generateSquares(this.props.width, this.props.height, this.props.bombs, this.props.seed),
+            isGameWon: false,
+        };
+    }
+
+    componentDidUpdate(prevProps) {
+        if (
+            prevProps.width !== this.props.width ||
+            prevProps.height !== this.props.height ||
+            prevProps.bombs !== this.props.bombs ||
+            prevProps.reset !== this.props.reset ||
+            prevProps.seed !== this.props.seed
+        ) {
+            this.setState({
+                width: this.props.width,
+                height: this.props.height,
+                reset: this.props.reset,
+                seed: this.props.seed,
+                squares: this.generateSquares(this.props.width, this.props.height, this.props.bombs, (this.props.seed === "" ? getRndInteger(1000000000, 9999999999) : this.props.seed)),
+                isGameWon: false,
+            });
+        }
+    }
+
+    generateSquares(width, height, bombs, seed) {
+        // Initialize the squares
+        const squares = Array.from({length: height}, () => Array.from({length: width}, () => null));
+
+        if(bombs > width * height){
+            bombs = width * height;
+        }
 
         // Generate bombs
+        let rng = seedrandom(seed);
         let bombLocations = [];
         while (bombLocations.length < bombs) {
-            let bombLocation = [Math.floor(Math.random()*width), Math.floor(Math.random()*height)];
+            let bombLocation = [Math.floor(rng() * width), Math.floor(rng() * height)];
             if (!bombLocations.some(location => location[0] === bombLocation[0] && location[1] === bombLocation[1])) {
                 bombLocations.push(bombLocation);
             }
@@ -49,7 +62,7 @@ class Grid extends React.Component {
             return acc;
         }, squares);
 
-        this.state = {
+        this.setState({
             squares: bombSquare.map((row, rowIndex) =>
                 row.map((col, colIndex) =>
                     ({
@@ -61,7 +74,18 @@ class Grid extends React.Component {
                 )
             ),
             isGameWon: false
-        };
+        });
+
+        return bombSquare.map((row, rowIndex) =>
+            row.map((col, colIndex) =>
+                ({
+                    isBomb: col,
+                    clicked: false,
+                    isFlagged: false,
+                    adjacentBombs: this.calculateAdjacentBombs(bombSquare, rowIndex, colIndex)
+                })
+            )
+        );
     }
 
     calculateAdjacentBombs(squares, row, col) {
@@ -106,8 +130,8 @@ class Grid extends React.Component {
             if(!newSquares[row][col].isFlagged) {
                 if (newSquares[row][col].isBomb) {
                     // if the clicked square is a bomb, set clicked to true for all squares
-                    for (let i = 0; i < newSquares.length; i++) {
-                        for (let j = 0; j < newSquares[i].length; j++) {
+                    for (let i = 0; i < this.state.height; i++) {
+                        for (let j = 0; j < this.state.width; j++) {
                             newSquares[i][j].clicked = true;
                         }
                     }
